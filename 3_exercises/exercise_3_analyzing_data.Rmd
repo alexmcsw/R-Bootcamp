@@ -1,0 +1,67 @@
+# R Bootcamp Exercise
+
+## Analyzing Data
+
+Remember to load in your packages!
+
+```{r, include = FALSE}
+
+# Load libraries
+library(cansim) # read in CODR/NDM tables
+library(dplyr)
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+```
+
+## Load your data
+
+1. Load your cleaned data from [the last exercise](./2_cleaning_data.Rmd) or run this code chunk.
+
+```{r}
+
+# Load our data 
+df <- get_cansim("32-10-0112-01")
+
+#drop totally empty columns
+for (col in colnames(df)){      # loop through all our columns
+    if (all(is.na(df[col]))){  # check if NAs appear in the respective column in ALL rows
+      df <- select(df, -(col))  # drop that column from our dataframe
+      }              
+}
+#drop boring columns
+
+df <- select(df, -(ends_with("ID") | "STATUS" | "DECIMALS" | "TERMINATED"))
+
+```
+
+## Analysis
+
+2. Does any commodity have a value of exactly 999 units at any point in time? Which, when and where?
+
+```{r}
+
+
+```
+
+3. Filter for your favourite dairy product. Compute the mean, standard deviation, min, max, and any other relevant summary statistics for this product.
+
+```{r}
+
+
+```
+
+4. Find out what is the most numerous commodity in Canada (or another region) over the years.
+
+```{r}
+
+
+```
+
+5. Compute the cheese stock per capita over time:
+Access population data [here](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000501).
+
+```{r}
+
+
+```

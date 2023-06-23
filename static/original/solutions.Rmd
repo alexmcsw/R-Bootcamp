@@ -1,0 +1,285 @@
+# 2022 Innovation Camp Coding Challenge Solutions
+
+## Table of Contents
+- Introduction
+- Instructions
+    1. Load the data
+    2. Clean the data
+    3. Create a plot
+    4. Do some analysis
+    5. Prepare a report
+- Further Directions
+
+## Introduction
+
+Rmarkdown files consist of blocks or chunks of code written in R and text written in markdown. You can run the code chunk by chunk or by knitting the entire document at once.
+
+In the following chunk we load packages we will need and set preferences for knitting the document. Anything behind a "#" symbol is "commented code" and will be ignored by the compiler.
+```{r, include = FALSE}
+# Load libraries
+library(cansim) # read in CODR/NDM tables
+library(dplyr) # allows data manipulation
+library(tidyr) # allows for shaping the data
+library(plotly) # for creating plots
+library(lubridate) # for manipulating date-time objects
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+## Instructions
+
+### 1. Load the data
+Today we will be working with [Stocks of specified dairy products](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3210000101#tables). This data is stored in a CODR table
+```{r}
+# Load our data 
+df <- get_cansim("32-10-0001-01")
+
+```
+
+Let's get to know the data a bit better. Let's checkout the columns and the range of values.
+```{r}
+# print a summary of our data
+print(summary(df))
+
+```
+
+What are some things you notice about the data?
+
+### 2. Clean the data
+In short, "cleaning data" means to prepare it for analysis. Removing empty values, converting values to the same format or otherwise manipulating your data to improve the quality and uniformity are all examples of cleaning your data.
+
+How might we need to clean this data?
+
+```{r}
+# drop uninteresting columns
+df <- df %>% select(-("STATUS" | "SYMBOL" | starts_with("Classification")))
+
+# there are two date type columns. Let's keep the more precise one.
+df <- df %>% select(-"REF_DATE")
+
+```
+
+Now let's drop some columns we aren't really interested in. Using the above as an example, drop "SCALAR_FACTOR", "SCALAR_ID", and "DECIMALS". Note that there are many different equivalent ways to drop columns.
+
+```{r}
+df <- df %>% select(-("SCALAR_FACTOR" | "SCALAR_ID" | "DECIMALS"))
+# ALTERNATIVELY: df <- df %>% select(-("DECIMALS | starts_with("SCALAR")))
+```
+
+Notice that we have units in our data!
+```{r}
+
+print(unique(df["UOM"])) #prints the unique values in our "UOM" column
+
+```
+This result makes sense since we have solid and liquid diary products in our dataset. This is something that we may want to keep in mind as we conduct our analysis. Are there any other columns you'd like to investigate?
+```{r}
+
+# EXAMPLE SOLUTION
+#Check the variety of values in GEO and Stocks
+print(unique(df["GEO"]))
+print(unique(df["Stocks"]))
+
+```
+
+### 3. Create a plot
+We're now a bit more familiar with our data, but it can be difficult to parse from a table! Let's create a plot so we can get a better idea of what's going on. What are some things we might want to find out and what is the best way to visualize them?
+
+Since we have date information, it makes sense to make a time series plot! To keep things simple, let's focus on creamery butter in Canada over time.
+
+```{r}
+
+#create a bar plot
+fig <- plot_ly(
+  data = df %>% filter(GEO == "Canada" & Commodity == "Creamery butter" & Stocks == "Total stocks"), # filtering for Canada, Creamery butter and total stock values only
+  x = ~Date, # the x-axis will be the date
+  y = ~VALUE, # the y-qaxis will be the values of the commodity
+  type = "bar" # the type of plot will be bar
+  ) %>%
+  layout(title="Creamery Butter Stock in Canada", xaxis = list(title = "Date"), yaxis = list(title = "Value (t)")) # set the title for the graph and axes.
+
+fig # call the fig to display it
+
+```
+
+Using the code above, make a new plot showing the stocks of another dairy product in another region over time. Be sure to update the title as appropriate. 
+
+```{r}
+#Let's do variety cheese in Alberta, for example.
+
+#create a bar plot
+fig <- plot_ly(
+  data = df %>% filter(GEO == "Alberta" & Commodity == "Variety cheese" & Stocks == "Total stocks"), # filtering for Alberta, Variety cheese, and total stock values only
+  x = ~Date, # the x-axis will be the date
+  y = ~VALUE, # the y-axis will be the values of the commodity
+  type = "bar" # the type of plot will be bar
+  ) %>%
+  layout(title="Variety cheese Stock in Alberta", xaxis = list(title = "Date"), yaxis = list(title = "Value (t)")) # set the title for the graph and axes.
+
+fig # call the fig to display it
+
+```
+
+We might also be curious about the breakdown of type of dairy product stocks. Let's visualize this in a pie chart. To keep it simple, let's focus on Canada and the most recent data, so June 2022. Recall the units we observed in part 1. Some of these stocks are measured in Tonnes (1000 kg) and some in Kiloliters (1000 L).
+```{r}
+# create a pie chart showing the composition of total dairy stocks in Canada in June 2022
+fig <- plot_ly(
+  data = df %>% filter(GEO == "Canada" & Date == "2022-06-01" & Stocks == "Total stocks"), # filter for Canada, total stocks and June 2022 only
+  labels = ~Commodity, # the labels of the pie chart will be the commodities
+  values = ~VALUE, # the sizes of each slice are determined by the values of commodities
+  type = "pie" # the plot will be a pie chart
+  ) %>%
+  layout(title="Canadian Dairy Product Stocks for 2022-06-01") # set the chart name
+
+fig # call the fig to display
+
+```
+
+Make another pie chart for another time period.
+```{r}
+# create a pie chart showing the composition of total dairy stocks in Canada in March 1974
+fig <- plot_ly(
+  data = df %>% filter(GEO == "Canada" & Date == "1974-03-01" & Stocks == "Total stocks"), # filter for Canada, total stocks and March 1974 only
+  labels = ~Commodity, # the labels of the pie chart will be the commodities
+  values = ~VALUE, # the sizes of each slice are determined by the values of commodities
+  type = "pie" # the plot will be a pie chart
+  ) %>%
+  layout(title="Canadian Dairy Product Stocks for 1974-03-01") # set the chart name
+
+fig # call the fig to display
+
+```
+
+Or take a look at the different plot types here:https://plotly.com/r/ and try to plot something else
+```{r}
+# let's re-visualize the above pie charts as a bar chart
+
+fig <- plot_ly(
+  data = df %>% filter(GEO == "Canada" & Stocks == "Total stocks" & Date == "1974-03-01"), 
+  x = ~Commodity,
+  y = ~VALUE, 
+  type = 'bar')%>%
+  layout(title="Canadian Dairy Product Stocks for 1974-03-01", xaxis = list(title = "Commodity"), yaxis = list(title = "Value")) # set the title for the graph and axes.
+
+
+fig
+
+```
+### 4. Do some analysis
+Let's compute the yearly averages of each commodity. Recall the average of a set of values is given by the sum of the values divided by the size of the set. That being said, R has many basic mathematical functions, like the mean, built right in.
+
+```{r}
+# compute the yearly mean values for each commodity and region
+data = df %>% 
+    filter(Stocks == "Total stocks") %>%
+    group_by(GEO, Commodity, year = lubridate::floor_date(Date, "year")) %>% # group the df by region and Commodity for each year
+    summarize(mean = mean(VALUE, na.rm=TRUE)) #take the average of the values in each group we made above
+
+print(data)
+
+```
+Let's visualize this! Note that in the above code, we stored the filtered result under the variable "data" so we can refer to it later on.
+
+```{r}
+
+#create a bar plot
+fig <- plot_ly(
+  data %>% # this is the data from above
+    filter(GEO == "Canada" & Commodity == "Cheddar cheese"), # now we've added a filter to Canada and Cheddar cheese only. 
+  x = ~year, # the x-axis will be the year
+  y = ~mean, # the y-axis will be the yearly mean values of the commodity
+  type = "bar" # the type of plot will be bar
+  ) %>%
+  layout(title="Average yearly Cheddar Cheese Stock in Canada", xaxis = list(title = "Year"), yaxis = list(title = "mean value")) # set the title for the graph and axes.
+
+fig # call the fig to display it
+
+```
+
+
+
+### 5. Prepare a report
+
+In a separate document write a short summary of what you have learned. You can use whatever format you wish such as .txt, .md or .docs. You may wish to include some plots and/or special formatting or markdown.
+
+
+## Challenge yourself!
+Here are some extra tasks you can try.
+1. Find out what is the most numerous commodity in Canada (or another region) over the years.
+
+```{r}
+# Recall our averaged and grouped data is conveniently stored under the variable data but we repeated it here to remind you
+
+data = df %>% 
+    filter(Stocks == "Total stocks" & GEO == "Canada") %>%
+    group_by(GEO, Commodity, year = lubridate::floor_date(Date, "year")) %>% # group the df by region and Commodity for each year
+    summarize(mean = mean(VALUE, na.rm=TRUE)) # take the average of the values in each group we made above
+
+data <- data %>% group_by(year) %>% # group the data by years again
+    top_n(1, mean) #find the row with the max mean value in each group
+
+data[order(as.Date(data$year, format="%d/%m/%Y")),] %>% # order the data by year
+print()
+
+
+```
+
+2. Compute the cheese stock per capita over time:
+Access population data here:https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000501
+
+```{r}
+dfpop = get_cansim("17-10-0005-01") # load population data
+
+```
+
+```{r}
+names(dfpop)[names(dfpop) == "Age group"] <- "Age" # one of the columns has a space in it, this isn't good! remove it!
+
+```
+
+
+```{r}
+dfpop <- dfpop %>%
+  filter(GEO == "Canada" & Sex == "Both sexes" & Age == "All ages") # filter the population data for Canada, both sexes, and all ages to get the appropriate total
+
+```
+
+```{r}
+# the following code is from above in the file but is pasted here to remind you
+data = df %>% 
+    filter(Stocks == "Total stocks") %>%
+    group_by(GEO, Commodity, year = lubridate::floor_date(Date, "year")) %>% # group the df by region and Commodity for each year
+    summarize(mean = mean(VALUE, na.rm=TRUE)) # take the average of the values in each group we made above
+
+data <- data %>% 
+    filter(GEO == "Canada" & Commodity == "Cheddar cheese") # filter for Canada and Cheddar
+
+data <- data[-c(1,53),] # the dairy data has data for 1970 and 2022, but the population data does not. Let's drop the first and last row.
+
+# create a new column called percapita equal to the mean times 1000 divided by the population to get average kg of cheese per person
+data$percapita <- data$mean*1000/dfpop$VALUE 
+print(data) # take a look
+
+
+```
+
+Now let's take a look
+
+```{r}
+
+#create a bar plot
+fig <- plot_ly(
+  data, 
+  x = ~year, # the x-axis will be the year
+  y = ~percapita, # the y-axis will be the yearly mean values of the commodity percapita
+  type = "bar" # the type of plot will be bar
+  ) %>%
+  layout(title="Cheddar Cheese Stock Per Capita in Canada", xaxis = list(title = "Year"), yaxis = list(title = "kg")) # set the title for the graph and axes.
+
+fig # call the fig to display it
+
+```
+
+
+
+

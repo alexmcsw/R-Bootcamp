@@ -1,0 +1,5 @@
+# R Bootcamp
+
+## Best practices
+
+This folder contains information and exercises about best practices in R.

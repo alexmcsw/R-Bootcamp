@@ -1,0 +1,32 @@
+# R Bootcamp Code Challenge
+
+## The Challenge
+
+Print all prime numbers from 1 to 100.
+
+```{r}
+
+```
+
+## Step by Step
+1. How do you print the numbers 1 to 100?
+```{r}
+
+```
+2. How do you check if a number is prime?
+> A number p is prime if it's only divisors are 1 and p.
+> Equivalently you can check that there are no divisors between 2 and the nearest integer to the squareroot of p.
+```{r}
+
+```
+3. How can you print something conditionally?
+> Use an `if` loop!
+```{r}
+
+```
+
+5. Can you find a more efficient solution?
+> You may want to read up on prime sieves!
+```{r}
+
+```

@@ -1,0 +1,180 @@
+# R Bootcamp Tutorial
+
+## Analyzing Data
+
+In this tutorial, we'll dig into the dairy data to learn from it and produce some summaries. In this tutorial we'll cover:
+
+1. Merges
+2. Summary Statistics
+3. Mutate
+4. `group_by()` and `summarise()`
+
+---
+
+## Introduction
+
+Now that the data is clean, we can analyze it. Let's repeat the steps from the cleaning  tutorial, but without filtering for "Canada" as the location so we can get data from regions across the country. We will also remove columns including Canada as the location. Run the below code to generate the dataframe that we will analyze.
+
+```{r, include = FALSE}
+# Repeat data cleaning steps from lesson 2
+
+library(cansim) # read in CODR/NDM tables
+library(ggplot2)
+library(tidyverse)
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+# Load cansim data 
+df <- get_cansim("32-10-0001-01")
+
+for (col in colnames(df)){      # loop through all our columns
+    if (all(is.na(df[col])))   # check if NAs appear in the respective column in ALL rows
+      {print(col)               # if so, tell us which column
+      df <- select(df, -(col))  # drop that column from our dataframe
+      }              
+}
+
+# drop ID columns
+df <- select(df, -(ends_with("ID")))
+
+# Filter for total creamery butter stocks and remove the country totals
+df <- filter(df, Commodity=="Creamery butter", GEO != "Canada", Stocks == "Total stocks")
+```
+
+## 1. Merges
+
+Merges (also known as joins) allow you to join datasets (`x` and `y`) by mutual columns. Take for example, if you had a list of everyone's favorite flower and a separate list of everyone's addresses. If you wanted to generate a single list with which flower your should deliver where, **merging** the two lists by name would help.
+
+There are 4 main types of joins:
+
+1. Natural (also known as inner) join: Keeps only rows that match from both dataframes
+2. Full (also known as outer) join: Keeps all rows from both dataframes
+3. Left join: Includes all rows of data frame `x` and only those from `y` that match
+4. Right join: Includes all rows from data frame `y` and only those from `x` that match.
+
+![Join Types (R for Data Science)](../static/images/join_types.png)
+
+Let's experiment with a **left join** on our dataset. If you take a look at `df`, you will notice that between certain years, the Atlantic Provinces are listed together rather than separately. To see how creamery production (`x`) has changed over time in the regions, let's assign all of the other province data a region. To do this, we will need a list of which provinces belong to which regions (`y`). For this, we can load in a province key (`prov_data.csv`). The file encoding argument avoids any special characters being loaded in when we import the file.
+
+```{r}
+# Load province data
+prov_data_csv <- read.csv("../static/prov_data.csv", fileEncoding = 'UTF-8-BOM')
+```
+
+Now, we will do a left join with the `merge()` function. As was mentioned before, a left join will keep rows from `x` along with only the columns from `y` that match.
+
+```{r}
+# left join province info in with dplyr left_join
+df_regions <- left_join(x = df, 
+                        y = prov_data_csv, 
+                        by = c("GEO" =  "Province"))
+```
+
+#### Exercise 1 {style="color:blue;"}
+
+Read the `dplyr` documentation and find out how to do a right join on the data instead. What happens?
+
+```{r}
+
+```
+
+#### Exercise 2 {style="color:blue;"}
+
+Congrats - you've mastered merges!  However, there's one last puzzle to solve. There are some NA's in our `df_region` data. Can you find out where and why?
+
+<!--It seems that the table was inconsistent in its capitalization of the provinces. We can sub those out with the proper versions with a `str_replace_all()` command.-->
+
+Run the below code to fix this:
+
+```{r}
+# Make any NA columns in Regions carry over from GEO
+for (i in 1:nrow(df_regions)){    
+
+  if(is.na(df_regions$Region[i])){
+    df_regions$Region[i] <- df_regions$GEO[i] 
+  }
+
+  }
+
+# Fix capitalization errors in Regions
+df_regions$Region <- str_replace_all(df_regions$Region, c("Atlantic provinces" = "Atlantic Provinces"))
+```
+
+## 2. Summary Statistics
+
+Let's take a deep dive into the dairy data for Alberta over all the years.
+
+```{r}
+creamery_Alberta <- filter(df_regions,  GEO == "Alberta")
+```
+
+You can do some summary stats on the dataframe to find the average (mean) and standard deviation of stocks in Alberta.
+
+```{r}
+# Get the mean of Alberta stocks 
+mean(creamery_Alberta$VALUE)
+```
+
+Note the error message that this command gives. You can ignore NA's by adding `na.rm = TRUE`
+
+```{r}
+# Get the mean of Alberta stocks 
+mean(creamery_Alberta$VALUE, na.rm = TRUE)
+```
+
+#### Exercise 3 {style="color:blue;"}
+
+Use `sd()` to calculate the standard deviation in Alberta's creamery stocks.
+
+## 3. Mutate
+
+`mutate()` is a `dplyr` function that allows us to create new columns by modifying existing ones.
+
+Let's make a column for year by grabbing the first 4 characters of the `REF_DATE` column in `df_regions`. As part the `dplyr` universe, `mutate()` can be used with pipe (`%>%`) syntax, as below:
+
+You can think of the pipe as an "and then" statement
+
+```{r}
+# Make a year column
+df_regions <- df_regions %>% mutate(year = substr(REF_DATE,1,4)) 
+```
+
+So, the above line reads as: take `df_regions` and then mutate `year` to be the first 4 characters of `REF_DATE`.
+
+## 4. `group_by()` and `summarise()`
+
+In our `df_regions` dataframe, we now wish to "collapse" the table and get metrics for entire regions. How would we calculate creamery stock per region per year? That's where `group_by()` comes along. `group_by()` can be chained along with `mutate()` with pipes to create some powerful summary tables. Check out the code below, which collapses our data by year and region.
+
+```{r}
+# Avg value by year 
+df_summary <- df_regions %>% group_by(year, Region) %>%
+  summarize(mean = mean(VALUE, na.rm = TRUE))
+```
+
+Let's save this dataframe to the static file to use in the next lesson
+
+```{r}
+write.csv(df_summary, file = "../static/df_summary.csv")
+```
+
+There are quite a few built in summary stats we may want to use:
+
+- Center: `mean()`, `median()`
+- Spread: `sd()`, `IQR()`, `mad()`
+- Range: `min()`, `max()`,
+- Position: `first()`, `last()`, `nth()`,
+- Count: `n()`, `n_distinct()`
+- Logical: `any()`, `all()`
+
+We can stack multiple summary functions inside the same `summarize()` function:
+
+```{r}
+df_summary <- df_regions %>% group_by(year, Region) %>%
+  summarize(mean = mean(VALUE, na.rm = TRUE), sd = sd(VALUE, na.rm =TRUE))
+```
+
+#### Exercise 4 {style="color:blue;"}
+
+Create a dataframe containing only data from Alberta that groups by month rather than year!
+
+Hint: Use `filter()`, `summarise()`, and `mutate()`.

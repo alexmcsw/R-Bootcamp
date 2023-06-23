@@ -1,0 +1,104 @@
+# R Bootcamp Tutorial Exercises
+
+Remember to load in your packages!
+
+```{r, include = FALSE}
+# Load libraries
+library(cansim) # read in CODR/NDM tables
+library(dplyr) # for data manipulation
+library(tidyr) # for shaping the data
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+## Load your data
+
+1. Load your data from [the last exercise](./1_reading_in_data.Rmd).
+
+```{r}
+# Load our data 
+df <- get_cansim("32-10-0112-01")
+```
+
+## Cleaning your data
+
+2. Using what you learned in the "Get to know your Data" section in the last exercise, what cleaning steps are necessary and why?
+
+- Dropping empty columns,
+- Dropping boring columns,
+- Some NAs appear throughout the data
+- The GEO column values aren't uniform
+
+3. Get rid of any totally empty columns
+
+```{r}
+#drop totally empty columns
+for (col in colnames(df)){      # loop through all our columns
+    if (all(is.na(df[col]))){  # check if NAs appear in the respective column in ALL rows
+      df <- select(df, -(col))  # drop that column from our dataframe
+      }              
+}
+```
+
+4. Get rid of any unhelpful or boring columns
+
+```{r}
+df <- select(df, -(ends_with("ID") | "STATUS" | "DECIMALS" | "TERMINATED"))
+```
+
+5. Remove redacted or missing data.
+
+```{r}
+#Let's check if we have anymore NAs in our data
+# We can reuse the same loop we used to check columns but with a slight cahnge
+
+for (col in colnames(df)){       # loop through all our columns
+    if (any(is.na(df[col])))     # check if NAs appear in the respective column in any rows
+      {print(col)                # if so, tell us which column
+      print(sum(is.na(df[col]))) # and the number of NAs for good measure
+      }              
+}
+```
+
+Interesting! We have some NAs in our VALUE column. Even though most functions have the ability to ignore NAs in numeric data, let's drop them anyways.
+
+Since VALUE and val_norm seem to be related, let's try dropping only according to VALUE and see if that fixes things up.
+
+```{r}
+# slicing method
+df[!is.na(df$VALUE),]
+
+# subsetting method
+subset(df,!is.na(VALUE))
+
+
+#tidyr built in method
+df <- drop_na(df, VALUE)
+```
+
+Now we'll double check we got all the NAs:
+
+```{r}
+for (col in colnames(df)){       # loop through all our columns
+    if (any(is.na(df[col])))     # check if NAs appear in the respective column in any rows
+      {print(col)                # if so, tell us which column
+      print(sum(is.na(df[col]))) # and the number of NAs for good measure
+      }              
+}
+```
+
+6. Filter or subset your data to only include dairy products that you like.
+
+```{r}
+# Check what our options are
+
+unique(df$Commodity)
+```
+
+There's a lot of items here! I'm going to try and make a frozen dessert only dataset. Let's see if I can be clever!
+
+```{r}
+# Check what our options are
+df_dessert <- filter(df, !grepl("cheese",Commodity)) # filter for rows which don't contain a specific string
+unique(df_dessert$Commodity)                         # check what's left
+```

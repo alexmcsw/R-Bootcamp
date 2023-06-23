@@ -1,0 +1,132 @@
+# R Bootcamp Tutorial
+
+## Visualizing data
+
+In this tutorial, we'll visualize some of our findings from the last lesson with the plotting package `ggplot`. In this tutorial we'll cover:
+
+1. Creating a scatterplot
+2. Adding color 
+3. Editing Labels
+4. Final touches
+
+
+## Introduction
+
+Visualizations are a great way to quickly and effectively share data insights. Using different types of plots, colors, labels, and much more, you can convey complex ideas easily. 
+
+Let's make sure we have the analyzed and cleaned data loaded. 
+
+```{r, include = FALSE}
+# Possible output of cleaned data from lesson 3
+
+library(cansim) # read in CODR/NDM tables
+library(ggplot2)
+library(tidyverse)
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+# Load cansim data 
+df <- get_cansim("32-10-0001-01")
+
+df <- filter(df,Commodity == "Creamery butter", GEO != "Canada") 
+
+# Load province data
+prov_data_csv <- read.csv("../static/prov_data.csv", fileEncoding = 'UTF-8-BOM')
+
+# left join province info in 
+df_regions <- merge(x = df, y = prov_data_csv, 
+          by.x = "GEO",
+          by.y = "Province", 
+          all.x = TRUE)
+
+# Fix any NA columns
+for (i in 1:nrow(df_regions)){    
+
+  if(is.na(df_regions$Region[i])){
+    df_regions$Region[i] <- df_regions$GEO[i] 
+  }
+
+  }
+
+# Make a year column
+df_regions$year <-  substr(df_regions$REF_DATE,1,4) 
+
+df_regions$Region <- str_replace_all(df_regions$Region, c("Atlantic provinces" = "Atlantic Provinces"))
+
+# Avg value by year 
+df_summary <- df_regions %>% group_by(year, Region) %>%
+  summarize(mean = mean(VALUE, na.rm = TRUE))
+
+  
+```
+
+
+
+## 1. Creating a Scatterplot
+
+`ggplot` is a great package for making visually appealing figures. Start by loading it in and defining you x and y axes as `aes`. `ggplot` uses the plus sign to add elements. Adding geom_point creates a scatterplot. 
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean)) +
+  geom_point() 
+```
+
+## 2. Adding Colour
+
+This plot could certainly use a bit of tweaking. We can see the various region's trends over time. Let's define them with some colour by editing the `aes`. 
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean, color = Region)) +
+  geom_point() 
+```
+
+
+#### Exercise {style="color:blue;"}
+Try making a vector of your own colors and applying them to the plot. Hint: use `scale_color_manual()`
+
+```{r}
+# your code here
+```
+
+## 3. Label Logistics
+That looks better but the labels could use some work! We can rotate the year labels and make them smaller so they're more legible. Do this with the `theme` argument.
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean, color = Region)) +
+  geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, size = 6))
+```
+
+We should probably add some more descriptive axis labels. Do this with `xlab` and `ylab`.  
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean, color = Region)) +
+  geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Year") +
+  ylab("Avergage Stocks of Creamery butter (Tonnes)")
+```
+
+
+## Themes
+
+`ggplot` comes with quite a few [premade themes](https://ggplot2.tidyverse.org/reference/ggtheme.html) to present your figure in. Note that they will override any theme arguments you make, so put it before your changes in the code. Try out a few themes to see what suits your style!
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean, color = Region)) +
+  geom_point() +  
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Year") +
+  ylab("Avergage Stocks of Creamery butter (Tonnes)")
+```
+
+#### Exercise {style="color:blue;"}
+Try plotting creamery butter stock data for all of Canada over time with a line graph. Hint: use `geom_line`. 
+
+

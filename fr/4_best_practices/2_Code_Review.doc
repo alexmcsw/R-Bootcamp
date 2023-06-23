@@ -1,0 +1,59 @@
+# R Bootcamp Tutorial
+
+## Code Review
+
+In this exercise you will be reviewing each others' code.
+
+Before we begin, I would like to remind you of the first guideline of the bootcamp:
+
+### 1. Have compassion
+
+Like anything, learning a new programming language is difficult. You are expected to treat your colleagues with kindness, patience and understanding. Not everyone has the same background and some people may struggle with some concepts more than others. Everyone has the capacity to program and we have the responsibility to foster a community that promotes that. Any behaviour to the contrary will not be tolerated and may result in removal from the boot camp.
+
+
+### The activity
+
+First, select a suitable project for review. Ideally, this should be something relating to your final report that you'd like some feedback on. It could be a bit of analysis, a visualization, or something else of similar complexity.
+
+You will be swapping code with a fellow participant to give and receive feedback on your code. In addition to a few items to improve upon please ensure you share at least one thing you like or find interesting about the code as well.
+
+Follow these steps:
+
+1. Read your own code.
+
+Take a few minutes to do a quick pass over your own code and see if you can catch any glaring mistakes or catch up on some documentation. 
+
+2. Ensure it is up to date.
+
+Commit and push your changes up to main or the branch you are working on and create a merge request (recommended).
+
+3. Swap code with your partner. 
+
+If you created a merge request you can 'request review' from your match. Otherwise provide them with access to your repository.
+
+4. Review the code.
+
+Take some time to read over your match's code and ensure you understand the idea. You may wish to hop into a quick one-on-one call to debrief or ask questions. You can read some R code review guidelines [here](https://www.r-bloggers.com/2020/07/best-practices-for-code-review-r-edition/). Here are some questions to try and answer:
+
+- Does this code accomplish the author’s purpose?
+- Are there any obvious logic errors in the code?
+- Does the code conform to existing style guidelines?
+- Is there adequate documentation and comments?
+- Are there any areas where code could be improved? (made shorter, faster, etc.)
+- Is this the best way to achieve the desired result?
+- Does the code handle all edge cases?
+- Do you see potential for useful abstractions?
+
+If you are feeling overwhelmed or don't know where to start you should focus on the first 4 questions. Check if the code is easy to read and parse, look for typos, and evaluate the documentation and organization.
+
+5. Provide feedback. 
+
+If you took notes or conducted a gitlab review please share it with your match. Give them time to read it over or go through it together. 
+
+6. Give yourself some time.
+
+Take a moment to reflect on the feedback you received. You may wish to think about how or if you want to implement any suggestions.
+
+7. Share some of your feedback with the group.
+
+What did you do well? What did you struggle with? How would you have written your code differently? How would you have conducted a code review differently? What role do you see code review having in your day to day work?

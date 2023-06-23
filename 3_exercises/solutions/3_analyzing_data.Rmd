@@ -1,0 +1,116 @@
+# R Bootcamp Exercise
+
+## Analyzing Data
+
+Remember to load in your packages!
+
+```{r, include = FALSE}
+# Load libraries
+library(cansim) # read in CODR/NDM tables
+library(magrittr)
+library(dplyr)
+library(lubridate)
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+## Load your data
+
+1. Load your cleaned data from [the last exercise](./2_cleaning_data.Rmd) or run this code chunk.
+
+```{r}
+# Load our data 
+df <- get_cansim("32-10-0112-01")
+
+#drop totally empty columns
+for (col in colnames(df)){      # loop through all our columns
+    if (all(is.na(df[col]))){  # check if NAs appear in the respective column in ALL rows
+      df <- select(df, -(col))  # drop that column from our dataframe
+      }              
+}
+#drop boring columns
+
+df <- select(df, -(ends_with("ID") | "STATUS" | "DECIMALS" | "TERMINATED"))
+```
+
+2. Does any commodity have a value of exactly 99 units at any point in time? Which, when and where?
+
+```{r}
+filter(df, VALUE == 999)
+```
+
+1. Filter for your favourite dairy product. Compute the mean, standard deviation, min, max, and any other relevant summary statistics for this product.
+
+```{r}
+#create a dessert only dataset!
+df_dessert <- filter(df, !grepl("cheese",Commodity)) # filter for rows which don't contain a specific string
+unique(df_dessert$Commodity)                         # check what's left
+```
+
+Looks good! Now let's do the analysis.
+
+```{r}
+#create a dessert only dataset!
+df_dessert <- df_dessert %>% group_by(Commodity, GEO) %>%
+  summarize(mean = mean(VALUE, na.rm = TRUE), sd = sd(VALUE, na.rm =TRUE), min = min(VALUE, na.rm =TRUE), max = max(VALUE, na.rm =TRUE))
+```
+
+4. Find out what is the most numerous average commodity in Canada (or another region) over the years.
+
+```{r}
+# Recall our averaged and grouped data is conveniently stored under the variable data but we repeated it here to remind you
+
+data <- df %>% 
+    filter(GEO == "Canada") %>%
+    group_by(Commodity, year = lubridate::floor_date(Date, "year")) %>% # group the df by Commodity for each year
+    summarize(mean = mean(VALUE, na.rm=TRUE)) # take the average of the values in each group we made above
+
+data <- data %>% group_by(year) %>% # group the data by years again
+    top_n(1, mean) #find the row with the max mean value in each group
+
+data[order(as.Date(data$year, format="%d/%m/%Y")),] %>% # order the data by year
+print()
+```
+
+5. Compute the cheese stock per capita over time:
+Access population data here:https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000501
+
+```{r}
+df_pop = get_cansim("17-10-0005-01") # load population data
+```
+
+Note the population data starts in 1971!
+
+```{r}
+names(df_pop)[names(df_pop) == "Age group"] <- "Age" # one of the columns has a space in it, this isn't good! remove it!
+```
+
+```{r}
+df_pop <-  filter(df_pop, GEO == "Canada" & Sex == "Both sexes" & Age == "All ages") # filter the population data for Canada, both sexes, and all ages to get the appropriate totaldf
+
+df_pop <- mutate(df_pop,year = lubridate::floor_date(Date, "year")) # change date from char to date type
+
+df_pop <- select(df_pop, c(year, VALUE)) #drop everything we don't need
+```
+
+```{r}
+# the following code is from above in the file but is pasted here to remind you
+data = df %>% 
+    group_by(GEO, Commodity, year = lubridate::floor_date(Date, "year")) %>% # group the df by region and Commodity for each year
+    summarize(mean = mean(VALUE, na.rm=TRUE)) # take the average of the values in each group we made above
+
+data <- data %>% 
+    filter(GEO == "Canada" & Commodity == "Cheddar cheese") # filter for Canada and Cheddar
+```
+
+```{r}
+#merge our data
+data <- merge(x = data, y = df_pop, 
+          by = "year")
+```
+
+```{r}
+# create a new column called percapita equal to the mean times 1000 divided by the population to get average kg of cheese per person
+data$percapita <- data$mean*1000/data$VALUE 
+print(data) # take a look
+```

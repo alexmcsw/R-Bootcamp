@@ -1,0 +1,379 @@
+---
+title: R Bootcamp Tutorial
+output:
+  ioslides_presentation
+---
+
+# R Bootcamp Tutorial
+
+## Visualizing data
+
+In this tutorial, we'll visualize some of our findings from the last lesson with the plotting package `ggplot2` and with `plotly`. In this tutorial we'll cover:
+
+
+1. Introduction to `ggplot` 
+2. Adding color 
+3. Editing Labels
+4. Optional Customization 
+5. Interactive plots with Plotly
+
+
+## Introduction
+
+Visualizations are a great way to quickly and effectively share data insights. Using different types of plots, colors, labels, and much more, you can convey complex ideas easily.
+
+
+## Setup
+
+
+Let's make sure we have the analyzed and cleaned data loaded. The code below will replicate your steps from the previous lesson. 
+
+
+```{r, include = TRUE}
+# Possible output of cleaned data from lesson 3
+
+# Merge types
+# Group_by
+# summary stats
+# Add one more viz to this one
+
+library(cansim) # read in CODR/NDM tables
+library(tidyverse) #ggplot2 is included in this collection
+library(plotly)
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+# Load cansim data 
+df <- get_cansim("32-10-0001-01")
+
+df <- filter(df,Commodity == "Creamery butter", GEO != "Canada") 
+
+# Load province data
+prov_data_csv <- read.csv("../static/prov_data.csv", fileEncoding = 'UTF-8-BOM')
+
+# left join province info in 
+df_regions <- merge(x = df, y = prov_data_csv, 
+          by.x = "GEO",
+          by.y = "Province", 
+          all.x = TRUE)
+
+# Fix any NA columns
+for (i in 1:nrow(df_regions)){    
+
+  if(is.na(df_regions$Region[i])){
+    df_regions$Region[i] <- df_regions$GEO[i] 
+  }
+
+  }
+
+# Make a year column
+df_regions$year <-  substr(df_regions$REF_DATE,1,4) 
+
+df_regions$Region <- str_replace_all(df_regions$Region, c("Atlantic provinces" = "Atlantic Provinces"))
+
+# Avg value by year 
+df_summary <- df_regions %>% group_by(year, Region) %>%
+  summarize(mean = mean(VALUE, na.rm = TRUE))
+```
+
+## 1. Introduction to `ggplot`
+
+`ggplot` is a great package for making visually appealing figures. It works like a Lego set, providing you different pieces that you can build with to produce great plots. There is a certain structure to  every `ggplot` plot, so let's take a moment to familiarize yourself with them. 
+
+Every ggplot begins with loading in the package and calling ggplot itself. This lets ggplot know we want to use it to make a plot. 
+
+```{r, include = TRUE}
+library(ggplot2)
+
+ggplot()
+
+```
+
+Now we'll direct ggplot to the dataframe we want it to draw data from. For example, we'd like to plot some data contained in the `df_summary` dataframe. 
+
+```{r, include = TRUE}
+library(ggplot2)
+
+ggplot(df_summary)
+
+```
+
+But how do you tell ggplot what you want it to plot? In comes the `aes` argument. `aes` lets you define which columns should be used for the x and y axes, on top of other factors we will explore later in this tutorial. If we wanted to explore how the mean stocks change overtime, we could plot `year` on the x axis and `mean` on the y.   
+
+```{r, include = TRUE}
+library(ggplot2)
+
+ggplot(df_summary, aes(x = year, 
+                       y = mean))
+
+```
+
+This is great! But where are our data points? First we need to specify the type of plot we'd like ggplot to make. Returning to the Lego analogy, ggplot uses the + sign to stick components of a plot together. Perhaps the + sign are the "nubs" of our Lego pieces. After the main ggplot argument, you can use **geoms** to add and layer components of a plot. For an example of some geoms, [check out the ggplot2 documentation here.](https://ggplot2.tidyverse.org/reference/). For examples of the plots they generate, [see the R graph gallery.]([here](https://r-graph-gallery.com/). 
+
+In this case, we'll use `geom_point()`. As the name suggests, it plots points on the x and y values given to produce a scatterplot. 
+
+```{r, include = TRUE}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, 
+                       y = mean)) +
+  geom_point() 
+```
+
+As you can see, all of the points have been plotted by their respective mean and year in each row. 
+
+
+
+### Plot-Specific Customizations
+
+Depending on the type of plot you're using, you'll come across different ways in how you can customize your plot. For example, for scatter plots, you can modify the shape, stroke (outline weight), size, and colour of the point.
+
+```{r}
+ggplot(df_summary, aes(x = year, y = mean)) +
+  geom_point(shape = 21, 
+             colour = "black", # Change outline colour
+             fill = "white", # Change fill colour
+             size = 5, # change point size
+             stroke = 5) # change outline weight
+```
+
+You can find more information on the available shapes [here](http://www.sthda.com/english/wiki/ggplot2-point-shapes).
+
+## 2. Adding Colour
+
+### Quick Colour Change
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean)) +
+  geom_point(colour = "red") 
+```
+
+### Colour as a factor
+
+Some of you may have noticed that can see the various region's trends over time, but they're hard to make out because they're all the same colour. Colour is one factor that you can adjust within the `aes()` argument. When colour is defined, ggplot will automatically look at what is within the column and define them by different colours. For example, in Region, we have the different provinces. Ggplot will automatically assign each province a colour and make a legend for those colours.
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year,
+                       y = mean, 
+                       colour = Region)) +
+  geom_point() 
+```
+
+## 3. Label Logistics
+
+That looks better but the labels could use some work! We can rotate the year labels and make them smaller so they're more legible. Another component you can add is `theme()`, which you can use to edit the appearance of your plots. Here we change the angle of the text 90 degrees with `angle =` and make them a bit smaller with `size = `. 
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean, colour = Region)) +
+  geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, # Change tick label angle
+                                   size = 6)) # change tick label text size
+```
+
+
+The theme arguments contains a lot of options to modify your plot ranging from specifiying the title size, changing the plot background colour, etc. You can find more information about these options [here](https://ggplot2.tidyverse.org/reference/theme.html).
+
+We should probably add some more descriptive axis labels. Do this with `xlab` and `ylab`.  
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean, colour = Region)) +
+  geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Year") +
+  ylab("Average Stocks of Creamery butter (Tonnes)")
+```
+
+Below is an alternative to labels:
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean, colour = Region)) +
+  geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  labs(title = "This is the title of my graph",
+        subtitle = "Here is where you can add a subtitle",
+        x = "Year",
+        y = "Average Stocks of Creamery butter (Tonnes)",
+        colour = "Region")
+```
+
+Relating back to best practices in cleaning data, we also want to keep only important or relevant information in the plot.
+
+
+## 4. Optional Customizations
+
+### Themes
+
+`ggplot2` comes with quite a few [premade themes](https://ggplot2.tidyverse.org/reference/ggtheme.html) to present your figure in. Note that they will override any theme arguments you make, so put it before other theme changes with `theme()`. Try out a few themes to see what suits your style!
+
+
+```{r}
+# Create a simple scatterplot with ggplot
+ggplot(df_summary, aes(x = year, y = mean, color = Region)) +
+  geom_point() +
+  theme_minimal() + # adds a minimal theme
+  theme(axis.text.x = element_text(angle = 90, 
+                                   size = 6)) +
+  xlab("Year") +
+  ylab("Avergage Stocks of Creamery butter (Tonnes)")
+```
+
+
+### Faceting
+
+If you want to express more dimensionality to your plots you can include a `facet` function. You can find more information on facetting [here.](https://ggplot2-book.org/facet.html#:~:text=facet_wrap()%20makes%20a%20long,with%20ncol%20%2C%20nrow%20%2C%20as)
+
+
+### Flipping the Orientation
+
+This is probably more applicable to some types of plots than others but if you want to flip the orientation of your plot you can add the function `coord_flip()`. You can find more information on this function [here](https://ggplot2.tidyverse.org/reference/coord_flip.html).
+
+
+#### Exercise 1 {style="color:blue;"}
+
+Try plotting creamery butter stock data for all of Canada over time with a line graph. Hint: use `geom_line`.
+
+
+```{r}
+
+```
+
+> A quick note: sometimes you'll have geom_line() with what seems all of the required fields  present but your line isn't appearing? You might need to include `geom_line(aes(group = 1))`.
+
+
+## 5. Interactive Plots with Plotly
+Now let's retry some of these steps using [Plotly](https://plotly.com/r/). Plotly allows you to make interactive plots that never fail to impress. 
+
+As you can see, plotly also requires you to specify the data and x and y axes. The plot type is specified by `type = `.
+
+---
+
+### 1. Creating a Scatterplot
+
+```{r}
+fig <- plot_ly(
+  data = df_summary,
+  x = ~year, # the x axis will be year
+  y = ~mean, # the y axis will be mean
+  type = "scatter" # the type is scatter
+  )
+fig # call the fig to display
+```
+
+### 2. Adding Colour
+
+```{r}
+fig <- plot_ly(
+  data = df_summary,
+  x = ~year, # the x axis will be year
+  y = ~mean, # the y axis will be mean
+  type = "scatter", # the type is scatter
+  color = ~Region #specify the colour
+  )
+fig # call the fig to display
+```
+
+
+### 3. Label Logistics
+
+
+```{r}
+fig <- plot_ly(
+  data = df_summary,
+  x = ~year, # the x axis will be year
+  y = ~mean, # the y axis will be mean
+  type = "scatter", # the type is scatter
+  color = ~Region #specify the colour
+  ) %>% 
+  layout(xaxis = list(title = 'Year'), yaxis = list(title = "Avergage Stocks of Creamery butter (Tonnes)")) 
+
+fig # call the fig to display
+```
+
+
+
+### 4. `ggplot2` and `plotly`
+
+If you prefer `ggplot2`, you can wrap it in plotly so you can get the interactivity:
+
+```{r}
+# Create a simple scatterplot with ggplot
+p<- ggplot(df_summary, aes(x = year, y = mean, color = Region)) +
+  geom_point() +  
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Year") +
+  ylab("Avergage Stocks of Creamery butter (Tonnes)")
+
+ggplotly(p)
+```
+
+
+### Customizing the tooltip
+
+One of the benefits of plotly is that you have this interactivity that wasn't present in a static plot and part of this includes a tooltip which can show additional information without cluttering the plot. A tooltip is an box that appears when you hover over a data point. You can customize the tooltip. Below is an example of this:
+
+```{r}
+# Create a simple scatterplot with ggplot
+p<- ggplot(df_summary, 
+            aes(x = year, 
+            y = mean, 
+            color = Region, 
+            text = paste0("Mean: ", mean))) + # customize tooltip with the text argument
+  geom_point() +  
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Year") +
+  ylab("Avergage Stocks of Creamery butter (Tonnes)")
+
+ggplotly(p, tooltip = "text") # add text to tooltip
+```
+
+And if you want to have multiple lines of information to show in the tooltip you can use `<br>` for a line break.
+
+```{r}
+# Create a simple scatterplot with ggplot
+p<- ggplot(df_summary, 
+            aes(x = year, 
+            y = mean, 
+            color = Region, 
+            text = paste0("Year: ", year,
+                          "<br>", # Create a new line in the tooltip
+                          "Mean: ", mean,
+                          "<br>",
+                          "Region: ", Region
+                          ))) +
+  geom_point() +  
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Year") +
+  ylab("Avergage Stocks of Creamery butter (Tonnes)")
+
+ggplotly(p, tooltip = "text")
+```
+
+> Note: sometimes you lose some functionalities when you wrap a `ggplot2` plot within the `ggplotly` function or some things may not always turn out as expected. For example, if you move the legend to the bottom position in the `ggplot2` plot you might notice that `ggplotly` moves the legend back to the top right position. Using the `ggplotly` wrapper isn't always perfect but it lets you use the grammar of `ggplot2` to make plots, so that's the trade-off.
+
+
+
+### 5. Plotly Animations
+
+Let's switch to an unstacked bar plot and animate over the years.
+
+```{r}
+fig <- plot_ly(
+  data = df_summary,
+  x = ~Region, # the x axis will be region
+  y = ~mean, # the y axis will be mean
+  color = ~Region, #specify the colour
+  frame = ~year #Specify what indexes the frames for the animation
+  ) %>% 
+  layout(xaxis = list(title = 'Year'), yaxis = list(title = "Avergage Stocks of Creamery butter (Tonnes)")) 
+fig
+```
+
+
+

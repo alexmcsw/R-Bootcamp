@@ -1,0 +1,52 @@
+# R Bootcamp Tutorial Exercises
+
+Remember to load in your packages!
+
+```{r, include = FALSE}
+# Load libraries
+library(cansim) # read in CODR/NDM tables
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+## Load your data
+
+1. Load in yet another dairy dataset from here [this data set](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3210011201). Alternatively, you may browse the [Government of Canada Open Data Portal](https://www150.statcan.gc.ca/n1/en/type/data?MM=1#tables) for a dataset on a topic that interests you.
+
+```{r}
+# Load the cansim package
+library(cansim)
+
+# Load our data 
+df <- get_cansim("32-10-0112-01")
+```
+
+## Get to know your data
+
+1. What are the columns?
+
+```{r}
+colnames(df)
+summary(df)
+```
+
+2. What are the data types?
+
+```{r}
+summary(df)
+sapply(df, typeof)
+sapply(df, class)
+```
+
+3. What are some values in your columns?
+
+```{r}
+summary(df)
+
+df_cols <- colnames(df)
+for (col in df_cols){
+   print(unique(df[col]))
+}
+```
+
+1. What is most interesting to you about your data?

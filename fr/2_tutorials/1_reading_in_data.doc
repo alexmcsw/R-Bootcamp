@@ -1,0 +1,90 @@
+# R Bootcamp Tutorial
+
+## Methods for reading in data
+In this tutorial we'll cover how to read in data with:
+
+1. The `cansim` packages
+2. From a csv file
+
+We will also cover
+
+3. Getting to know your data
+
+
+## Introduction
+
+Rmarkdown files consist of blocks or chunks of code written in R and text written in markdown. You can run the code chunk by chunk or by knitting the entire document at once.
+
+In the following chunk we load packages we will need and set preferences for knitting the document. Anything behind a "#" symbol is "commented code" and will be ignored by the compiler.
+
+```{r, include = FALSE}
+# Load libraries
+library(cansim) # read in CODR/NDM tables
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+## 1. `cansim` package
+Today we will be working with [Stocks of specified dairy products](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3210000101#tables). This data is stored in a CODR (Common Output Database Repository) table
+
+To load the data we use a [package called `cansim`](https://cran.r-project.org/web/packages/cansim/index.html) which contains predefined functions and methods to access cansim/CODR tables. The number is called the PID and can be found on the data webpage.
+
+```{r}
+# Load the cansim package
+library(cansim)
+
+# Load our data 
+df <- get_cansim("32-10-0001-01")
+
+```
+
+#### Best Practice: Using an API method is typically better than downloading and reading in data {style="color:red"}
+
+## 2. CSV
+Note that on the data [webpage](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3210000101#tables) you have the option to download the data in CSV format. This isn't a recommended method but is a reasonable option with smaller data.
+
+```{r}
+# Load our data from the static folder
+df_csv <- read.csv("../static/data.csv")
+
+```
+This is a small, hand-made dataset to illustrate reading in as a CSV. We'll use it later on in our analysis.
+
+## 3. Getting to know your data
+The data webpage gives us a nice glance at how our data looks, but let's uncover some R methods to explore further.
+
+```{r}
+# print a summary of our data
+print(summary(df))
+
+```
+Let's also look at our csv data
+```{r}
+# print a summary of our data
+print(summary(df_csv))
+
+```
+
+Let's delve into some of the columns more using square brackets, which can *index* a dataset. Here we index for a column in `df` called `UOM`. 
+```{r}
+
+print(unique(df["UOM"])) #prints the unique values in our "UOM" column
+
+```
+
+We could write lines one by one to explore the unique values in each column, but let's try to be clever! Here we use a *for loop* that places the name of each column in `df` into the previous command. 
+
+
+```{r}
+
+for (col in colnames(df)){
+    print(unique(df[paste0(col)]))
+}
+
+
+```
+
+What are some things you notice about the data? Take a look at the outputs surrounded by carats (`< >`). 
+```{r}
+
+```

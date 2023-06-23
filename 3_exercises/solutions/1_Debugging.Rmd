@@ -1,0 +1,106 @@
+# R Bootcamp Tutorial
+
+## Debugging
+
+Each of the following code blocks contain one or more errors. You should:
+
+1. Attempt to run the code
+2. Diagnose the problem
+3. Correct the problem  
+4. Add a bit of documentation to the code
+5. Based on what you now know about R, try to create your own debugging exercise
+
+Some notes:
+
+- Remember to restart your R session before attempting these exercises (`Ctrl+Shift+F10`)
+- Pay attention to any error messages; they are trying to help you!
+- Remember you have the internet at your disposal
+- Not every problem will produce an error message
+
+> Thank you to Thomas Wood and the R Python User Group for providing many debugging examples!
+
+1. 
+
+```{r}
+list.files("C:\Program Files (x86)")
+```
+
+```{r}
+# This line was missing a second \
+list.files("C:\\Program Files (x86)")
+```
+
+2. 
+```{r}
+library(purrr)
+map(.x = 1:2, .f = rnorm(n = 10, mean = .x))
+```
+
+```{r}
+#This chunk was improperly using purrr techniques. The syntax was incorrect.
+1:2 %>%
+  map(rnorm, n=10)
+
+#To maintain the style of the original, you must use an anonymous function
+1:2 %>%
+  map(function(x) rnorm(10, x))
+
+#third option
+map(.x = 1:2, .f = function(.x){rnorm(n = 10, mean = .x)})
+```
+
+3. 
+
+```{r}
+аbs(-1)
+```
+
+```{r}
+#this line had an improperly encoded symbol
+abs(-1)
+```
+
+4. 
+
+```{r}
+x <- "hello"
+y <- "goodbye"
+z <- x + y
+
+print(z)
+```
+
+```{r}
+# this chunk tried to use numerical methods for characters. There are multiple solutions depending on the desired outcome
+x <- "hello"
+y <- "goodbye"
+z <- c(x,y)
+
+print(z)
+```
+
+5. 
+
+```{r}
+select(.data = mtcars, cyl)
+```
+
+```{r}
+#This chunk did not have the required package loaded
+library(dplyr)
+select(.data = mtcars, cyl)
+```
+
+6. 
+
+```{r}
+library(dplyr)
+num_cyl <- 6.0
+filter(mtcars, num_cyl == num_cyl)
+```
+
+```{r}
+#The column name in the filter was not correct
+num_cyl <- 6
+filter(.data = mtcars, cyl == num_cyl)
+```

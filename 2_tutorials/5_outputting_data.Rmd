@@ -1,0 +1,139 @@
+---
+title: R Bootcamp Tutorial
+output:
+  ioslides_presentation
+---
+
+# R Bootcamp Tutorial
+
+## Outputting data
+
+In this tutorial, we'll explore some options for outputting or presenting data. Please be aware that some of these topics can become quite advanced.
+
+1. Writing out data
+2. Rmarkdown
+3. Quarto
+
+---
+
+To get started let's load in the data we've been working with throughout the bootcamp.
+
+```{r, include = FALSE}
+# Possible output of cleaned data from lesson 3
+
+# Merge types
+# Group_by
+# summary stats
+# Add one more viz to this one
+
+library(cansim) # read in CODR/NDM tables
+library(ggplot2)
+library(plotly)
+library(tidyverse)
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+# Load cansim data 
+df <- get_cansim("32-10-0001-01")
+
+df <- filter(df,Commodity == "Creamery butter", GEO != "Canada") 
+
+# Load province data
+prov_data_csv <- read.csv("../static/prov_data.csv", fileEncoding = 'UTF-8-BOM')
+
+# left join province info in 
+df_regions <- merge(x = df, y = prov_data_csv, 
+          by.x = "GEO",
+          by.y = "Province", 
+          all.x = TRUE)
+
+# Fix any NA columns
+for (i in 1:nrow(df_regions)){    
+
+  if(is.na(df_regions$Region[i])){
+    df_regions$Region[i] <- df_regions$GEO[i] 
+  }
+
+  }
+
+# Make a year column
+df_regions$year <-  substr(df_regions$REF_DATE,1,4) 
+
+df_regions$Region <- str_replace_all(df_regions$Region, c("Atlantic provinces" = "Atlantic Provinces"))
+
+# Avg value by year 
+df_summary <- df_regions %>% group_by(year, Region) %>%
+  summarize(mean = mean(VALUE, na.rm = TRUE))
+```
+
+### 1. Writing out data
+
+Recall in our analysis tutorial we used a function to write a dataframe to a csv:
+
+`write.csv()` comes from base R and by default includes row names
+
+```{r}
+write.csv(df_summary, file = "../static/df_summary.csv")
+```
+
+`write.csv2()` uses ';' as delimiters
+
+```{r}
+write.csv2(df_summary, file = "../static/df_summary2.csv")
+```
+
+`write_csv()` comes from the `readr` package. `readr` is included in the `tidyverse` collection. THe main differences are that this is about twice as fast as `write.csv()` and it doesn't write row names.
+
+```{r}
+write_csv(df_summary, file = "../static/df_summary3.csv")
+```
+
+To specify your own delimiters you need to use `write.table()`
+
+```{r}
+write.table(df_summary, file="../static/df_summary_table.csv", sep=",",dec = " ")
+```
+
+CSVs are great to work with because they're easy to read and can largely be treated like excel files, which is intuitive for many. However, for large data they are not the most efficient choice.
+
+#### Other file types
+
+For managing large data you can check out the surge team's [big dataset guide](https://gitlab.k8s.cloud.statcan.ca/surge-team/learning-material/big-datasets-guide).
+
+#### SAS
+
+We won't cover this here but you can read a guide on using SAS with R or Python [here](https://rpug.pages.cloud.statcan.ca/en/setup/r/saspy/).
+<!-- This might need to be updated with the new website -->
+
+### 2. Rmarkdown
+
+As you know, we've been working with .Rmd files throughout the bootcamp.
+
+#### Knitting an RMarkdown file
+
+Press the `Knit` button near the top of RStudio and select Knit to HTML. Some notes:
+
+- Typically HTML files don't go on Gitlab (*.html is in our .gitignore)
+- You can open HTML files in browser for presentations or sharing
+- Note the file sizes are a lot bigger than .Rmd files
+
+#### Creating a slideshow
+
+In the front matter at the top of this document, add the following lines:
+
+```{}
+output:
+  ioslides_presentation
+```
+
+Looks like it needs some work but it's an ok start! See [here](https://bookdown.org/yihui/rmarkdown/ioslides-presentation.html>) for further customization.
+
+### 3. Quarto
+
+Quarto is an open-source scientific and technical publishing system built on `Pandoc` and uses its variation of markdown as its underlying document syntax. Quarto is able to run Python, R, Julia, and Observable code. You can use Quarto to create book documents, presentations, websites, etc. Find guides on how to make some of these kinds of projects [here](https://quarto.org/docs/guide/).
+
+This is a new tool that comes with v2022.07 of RStudio--which to date (2023-03-07) is not available to all employees at StatCan as we typically are a year behind in R and RStudio versions.
+
+Find a cloneable repo for books [here](https://gitlab.k8s.cloud.statcan.ca/EDLP/documentation/cloneable-quarto-and-github-pages-repo) and for bilingual websites [here](https://gitlab.k8s.cloud.statcan.ca/surge-team/reusable-code/bilingual-websites-in-quarto).
+
+More details on Quarto to come!

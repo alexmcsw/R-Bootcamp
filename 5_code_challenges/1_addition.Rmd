@@ -1,0 +1,53 @@
+# R Bootcamp Code Challenge
+
+## The Challenge
+
+Write a script to sum an arbitrary number of integers together.
+
+```{r}
+
+```
+
+## Step by Step
+
+1. How do you add two numbers together?
+
+```{r}
+
+```
+
+2. How do you add multiple numbers together?
+
+```{r}
+
+```
+
+3. How can the user specify the numbers to be added?
+
+> Hint: Use the `readline` function: <https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/readline>
+
+```{r}
+
+```
+
+4. What if the user inputs something other than an integer?
+
+> Hint: use the `type()` function to check the inputs
+
+```{r}
+
+```
+
+5. Can you tidy up your previous work into a single function?
+
+> Hint: Remember the function should take user input integers as an input and output a single integer value in the end
+
+```{r}
+
+```
+
+6. Can you find a creative way to sum numbers without using standard methods (ie. sum() or +)?
+
+```{r}
+
+```

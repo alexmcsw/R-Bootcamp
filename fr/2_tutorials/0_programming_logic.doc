@@ -1,0 +1,60 @@
+# R Bootcamp Tutorial
+
+## Programming Logic (Optional)
+
+In this lesson, we will cover:
+
+1. Objects and Variables
+2. Data types
+3. Loops
+
+
+## Objects and Variables
+R is an object-oriented programming language. That means that it allows you to store single values (think a number or text) as a “variable.” 
+
+This is analogous to putting an object in a box and labeling that box. 
+
+ You can use a caret and dash to assign an object a value. For example:
+ 
+```{r}
+surveys <- 20 
+```
+
+`print` will allow you to see what is stored in a variable. 
+
+```{r}
+print(surveys)
+```
+
+## Data Types
+
+There are different data types in programming languages. Different types of data are treated differently by R and its functions. In R, the simplest are:
+
+* Character: Comprised of text with quotations around it. Ex: “red”
+* Numeric: Comprised of numbers
+* Logical: TRUE or FALSE
+
+Try the following:
+
+```{r}
+class(surveys)
+```
+
+What type of variable is `surveys`?
+
+## Loops
+
+One great thing about computers is that they don't mind completing repetitive tasks that might not be so fun for a human, leading to manual errors and boredom. *Loops* are iterative processes that apply instructions over a predefined set of data. 
+
+*For loops* are some of the most common and useful types of loops in R. Take a look at this code:
+
+```{r}
+
+for (i in 1:5) {
+  print(i)
+}
+
+```
+The loop defines a vector (1:5), which contains all of the numbers from 1 to 5. On each iteration of the loop, i represents one of these numbers. Then, the loop is instructed to print each i. Run the code and see what it produces! What would changing the vector's length do?
+
+

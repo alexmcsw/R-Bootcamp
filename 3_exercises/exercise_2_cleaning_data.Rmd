@@ -1,0 +1,53 @@
+# R Bootcamp Tutorial Exercises
+
+Remember to load in your packages!
+
+```{r, include = FALSE}
+
+# Load libraries
+library(cansim) # read in CODR/NDM tables
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+```
+
+## Load your data
+
+1. Load your data from [the last exercise](./1_reading_in_data.Rmd).
+
+```{r}
+
+```
+
+## Cleaning your data
+
+2. Using what you learned in the "Get to know your Data" section in the last exercise, what cleaning steps are necessary and why?
+
+
+
+
+3. Get rid of any totally empty columns
+
+```{r}
+
+```
+
+1. Get rid of any unhelpful or boring columns
+
+```{r}
+
+```
+
+1. Remove redacted or missing data.
+
+```{r}
+
+
+```
+
+6. Filter or subset your data to only include dairy products that you like.
+
+```{r}
+
+
+```
