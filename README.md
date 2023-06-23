@@ -6,6 +6,8 @@ English \| <a href="">français</a>
 
 # R Boot camp
 
+This bootcamp was created by Alexandra McSween for the Innovation Surge Team in 2022.
+
 ## Description
 
 This repository contains tutorials, exercises, and additional resources for participants of the IST R Bootcamp.
